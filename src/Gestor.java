@@ -4,6 +4,11 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.transform.*; 
+import javax.xml.transform.dom.*;
+import javax.xml.transform.stream.*;
 import java.util.Date;
 
 
@@ -27,127 +32,7 @@ public class Gestor {
             }
         }
     }
-    public static void EscriureEncarrecRandom(ArrayList<Encarrec> encarrecs) throws IOException {
-        crearDirectoris();
-        String ruta = PATH + "/fitxersRandom/";
-        String nomArxiu = ruta + "encarrecs_client_" + new SimpleDateFormat("dd-MM-yyyy_HH_mm_ss").format(new Date()) + ".bin";
-        try(RandomAccessFile random = new RandomAccessFile(nomArxiu, "rw")) {
-            for(Encarrec encarrec: encarrecs) {
-                random.writeInt(encarrec.getId()); // 4
-                random.writeChars(String.format("%-50s", encarrec.getNomClient())); // 100
-                random.writeChars(String.format("%-9s", encarrec.getTelefonClient())); // 18
-                random.writeChars(String.format("%-10s", encarrec.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))); // 20
-                ArrayList<Article> articles = encarrec.getArticles();
-                random.writeInt(articles.size()); // 4
-
-                for(Article article: articles) {
-                    random.writeChars(String.format("%-50s", article.getNom()));
-                    random.writeChars(String.format("%-9s", article.getUnitat().toString()));
-                    random.writeDouble(article.getQuantitat());
-                    random.writeDouble(article.getPreu());
-                }
-            }
-            System.out.println("S'ha creat el fitxer amb nom: " + nomArxiu + "\n");
-            System.out.println("Mostrant el fitxer binari generat...\n");
-            LlegirBinariRandom(nomArxiu);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    } 
-    public static void modificarEncarrec(String ruta, int id) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        try (RandomAccessFile random = new RandomAccessFile(ruta, "rw")) {
-            boolean trobat = false;
-            while (random.getFilePointer() < random.length()) {
-                int idActual = random.readInt();
-                long posicio = random.getFilePointer();
-                if(idActual == id) {
-                    trobat = true;
-                    posicio += 100;
-                    random.seek(posicio);
-                    System.out.println("Introdueix un nou telèfon:");
-                    String telefon = reader.readLine();
-                    System.out.println("Introdueix una nova data:");
-                    String data = reader.readLine();
-
-                    random.writeChars(String.format("%-9s", telefon));
-                    random.writeChars(String.format("%-10s", data));
-                    System.out.println("\nS'ha modificat l'encàrrec correctament\n");
-                    break;
-                } else {
-                    random.skipBytes(100+18+20);
-                    int articlesSize = random.readInt();
-                    random.skipBytes(articlesSize * (100 + 18 + 8 + 8));
-                } 
-            }
-            System.out.println("Mostrant el fitxer binari modificat...\n");
-            LlegirBinariRandom(ruta);
-            if(!trobat) {
-                System.out.println("No s'ha trobat cap encàrrec amb ID: "+ id);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    public static void LlegirBinariRandom(String ruta) throws IOException {
-        try (RandomAccessFile random = new RandomAccessFile(ruta, "r")) {
-            while (random.getFilePointer() < random.length()) {
-                int id = random.readInt();
-                String nomClient = readString(random, 50);
-                String telefonClient = readString(random, 9);
-                String dataString = readString(random, 10);
-                LocalDate data = LocalDate.parse(dataString, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-
-                int articlesCount = random.readInt();
-                ArrayList<Article> articles = new ArrayList<>();
-
-                for (int i = 0; i < articlesCount; i++) {
-                    String articleNom = readString(random, 50); 
-                    String unitat = readString(random, 9);
-                    double quantitat = random.readDouble();
-                    double preu = random.readDouble();
-
-                    Article article = new Article(articleNom, Unitat.fromString(unitat), quantitat, preu);
-                    articles.add(article);
-                }
-
-                Encarrec encarrec = new Encarrec(id, nomClient, telefonClient, data, articles);
-                encarrec.calcularPreuTotal();
-                System.out.println(generarAlbara(encarrec));
-            }
-        } catch (EOFException e) {
-            System.out.println("Se ha alcanzado el final del archivo.");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    public static void EscriureEncarrecSerialitzable(ArrayList<Encarrec> encarrecs) throws IOException {
-        crearDirectoris();
-        String ruta = PATH + "/Serializable/";
-        String nomArxiu = ruta + "encarrecs_client_" + new SimpleDateFormat("dd-MM-yyyy_HH_mm_ss").format(new Date(System.currentTimeMillis())) + ".bin";
-        try(ObjectOutputStream serializador = new ObjectOutputStream(new FileOutputStream(nomArxiu))) {
-            serializador.writeObject(encarrecs);
-            System.out.println("S'ha creat el fitxer amb nom: " + nomArxiu);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-    @SuppressWarnings("unchecked")
-    public static void LlegirEncarrecSerialitzable(String ruta) {
-        try(ObjectInputStream deserializador = new ObjectInputStream(new FileInputStream(ruta))) {
-            ArrayList<Encarrec> encarrecs = (ArrayList<Encarrec>) deserializador.readObject();
-            for(Encarrec encarrec: encarrecs) {
-                encarrec.calcularPreuTotal();
-                System.out.println(generarAlbara(encarrec));
-            }
-        } catch(FileNotFoundException f) {
-            f.printStackTrace();
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
+    
     public static String generarAlbara(Encarrec encarrec) {
         StringBuilder sb = new StringBuilder();
         sb.append("\nId: " + encarrec.getId() +"\n");
@@ -162,11 +47,66 @@ public class Gestor {
         sb.append("\nPreu total: " + encarrec.getPreuTotal() + "€\n");
         return sb.toString();
     }
-    private static String readString(RandomAccessFile random, int pos) throws IOException {
-        StringBuilder sb = new StringBuilder(pos);
-        for(int i = 0; i < pos; i++) {
-            sb.append(random.readChar());
+
+    public static void writeDOM(ArrayList<Encarrec> encargos) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            DOMImplementation implementation = builder.getDOMImplementation();
+            Document document = implementation.createDocument(null, "encarrecs", null);
+            document.setXmlVersion("1.0");
+
+            for(Encarrec emp : encargos) {
+                Element employee = document.createElement("encarrec");
+                employee.setAttribute("id", Integer.toString(emp.getId()));
+                document.getDocumentElement().appendChild(employee);
+
+                crearElement("nombre", emp.getNomClient(), employee, document);
+                crearElement("telefono", emp.getTelefonClient(), employee, document);
+                crearElement("fecha", emp.getData().toString(), employee, document);
+                for(Article a : emp.getArticles()) {
+                    crearElement("")
+                }
+
+                crearElement("precioTotal", emp.getPreuStr(), employee, document);
+            }
+            Source source = new DOMSource(document);
+            Result result = new StreamResult(new FileWriter("encarrecs_" + System.currentTimeMillis() + ".xml"));
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes"); 
+            transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "5");
+            transformer.transform (source, result);
+            System.out.println("XML generat correctament");
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return sb.toString();
+    }
+
+    public static String readDOM(String ruta) throws Exception {
+        ArrayList<Encarrec> encargos = new ArrayList<>();
+
+        String albaran = "";
+        for(Encarrec encarrec : encargos) {
+            albaran+=generarAlbara(encarrec);
+        }
+        return albaran;
+    }
+
+    public static String readSAX(String ruta, boolean varios) throws Exception {
+        String albaran = "";
+        
+        if(varios) { // especifica un unico cliente 
+
+        } else {
+            // leemos todos los encargos
+        }
+
+        return albaran;
+    }
+    public static void crearElement(String dadaEmpleat, String valor, Element arrel, Document document) {
+        Element element = document.createElement(dadaEmpleat);
+        Text text = document.createTextNode(valor);
+        element.appendChild(text);
+        arrel.appendChild(element);
     }
 }

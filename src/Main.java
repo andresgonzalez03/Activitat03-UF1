@@ -4,17 +4,19 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
+
+    public static ArrayList<Encarrec> encargos = new ArrayList<>();
+
+    public static void main(String[] args) throws Exception {
         mostrarMenu();
     }
-    private static void mostrarMenu() throws IOException {
+    private static void mostrarMenu() throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while(true) {
             System.out.println("Selecciona una opción:");
             System.out.println("1. Generar un nou encàrrec");
             System.out.println("2. Mostrar un encàrrec");
-            System.out.println("3. Modificar un encàrrec");
-            System.out.println("4. Sortir");
+            System.out.println("3. Sortir");
             String resposta = reader.readLine();
     
             switch(resposta) {
@@ -23,12 +25,11 @@ public class Main {
                     System.out.println("Els encàrrecs s'han generat correctament\n");
                 }
                 case "2" -> mostraEncarrecs();
-                case "3" -> modificarEncarrec();
-                case "4" -> {
+                case "3" -> {
                     System.out.println("Adéu");
                     return;
                 }
-                default -> System.out.println("Opció no vàlida. Tria 1, 2, 3 o 4");
+                default -> System.out.println("Opció no vàlida. Tria 1, 2 o 3");
             }
         }
     }
@@ -172,15 +173,7 @@ public class Main {
             }
         }
     }
-    private static void modificarEncarrec() throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("\nIndica la ruta de l'arxiu que vols llegir:");
-        String ruta = reader.readLine();
-        System.out.println("\nAra, l'ID de l'encarrec:");
-        int id = Integer.parseInt(reader.readLine());
-        Gestor.modificarEncarrec(ruta, id);
-    }
-    private static void generaEncarrecs() throws IOException {
+    private static void generaEncarrecs() throws Exception {
         ArrayList<Encarrec> encarrecs = new ArrayList<>();
         while(true) {
             Encarrec encarrec = new Encarrec();
@@ -192,7 +185,7 @@ public class Main {
             System.out.println("Vols generar un altre encàrrec? (sí o no)");
             String resposta = reader.readLine();
             if(resposta.equalsIgnoreCase("no")) {
-                quinFitxer(encarrecs);
+                Gestor.writeDOM(encarrecs);
                 break;
             }
         }

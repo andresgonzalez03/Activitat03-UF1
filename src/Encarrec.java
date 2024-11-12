@@ -72,6 +72,7 @@ public class Encarrec implements Serializable {
         this.telefonClient = telefonClient;
     }
     public double getPreuTotal() {return preuTotal;}
+    public String getPreuStr() {return Double.toString(preuTotal);}
     public void calcularPreuTotal() {
         this.preuTotal = 0;
         for(Article article : articles) {
