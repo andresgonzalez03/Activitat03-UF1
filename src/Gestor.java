@@ -26,24 +26,9 @@ public class Gestor {
             System.out.println("El directori ja existeix: " + carpeta.getPath());
         }
     }
-    
-    public static String generarAlbara(Encarrec encarrec) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\nId: " + encarrec.getId() +"\n");
-        sb.append("Nom del client: " + encarrec.getNomClient() + "\n");
-        sb.append("Telefon del client: " + encarrec.getTelefonClient() + "\n");
-        sb.append("Data de l'encàrrec: " + encarrec.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\n");
-        sb.append(String.format("%-10s %-10s %-10s %-10s%n", "Quantitat", "Unitats", "Article", "Preu"));
-        sb.append(String.format("%-10s %-10s %-10s %-10s%n", "=========", "=======", "=======", "===="));
-        for (Article a : encarrec.getArticles()) {
-            sb.append(String.format("%-10s %-10s %-10s %-10s%n", a.getQuantitat(), a.getUnitat(), a.getNom(), a.getPreu()));
-        }
-        sb.append("\nPreu total: " + encarrec.getPreuTotal() + "€\n");
-        return sb.toString();
-    }
     public static void writeDOM(ArrayList<Encarrec> encargos) throws Exception {
         crearDirectori();
-        String ruta = PATH + "/Serializable/";
+        String ruta = PATH + "/XML/";
         String nomArxiu = ruta + "encarrecs_client_" + new SimpleDateFormat("dd-MM-yyyy_HH_mm_ss").format(new Date(System.currentTimeMillis())) + ".xml";
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
@@ -82,36 +67,75 @@ public class Gestor {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes"); 
             transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "5");
             transformer.transform (source, result);
-            System.out.println("XML generat correctament");
+            System.out.println("XML generat correctament a la ruta: " + nomArxiu);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public static String readDOM(String ruta) throws Exception {
-        ArrayList<Encarrec> encargos = new ArrayList<>();
+    public static void readDOM(String ruta) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            Document document = builder.parse(ruta);
+            NodeList llistaEncarrecs = document.getElementsByTagName("encarrec");
 
-        String albaran = "";
-        for(Encarrec encarrec : encargos) {
-            albaran+=generarAlbara(encarrec);
+            ArrayList<Encarrec> encarrecs = new ArrayList<>();
+            for(int i = 0; i < llistaEncarrecs.getLength(); i++) {
+                Node nodeEncarrec = llistaEncarrecs.item(i);
+                if(nodeEncarrec.getNodeType() == Node.ELEMENT_NODE) {
+                    Element elementEncarrec = (Element) nodeEncarrec;
+                    int id = Integer.parseInt(elementEncarrec.getAttribute("id"));
+                    String nomClient = elementEncarrec.getElementsByTagName("nombre").item(0).getTextContent();
+                    String telefonClient = elementEncarrec.getElementsByTagName("telefono").item(0).getTextContent();
+                    LocalDate data = LocalDate.parse(elementEncarrec.getElementsByTagName("fecha").item(0).getTextContent(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+
+                    ArrayList<Article> articles = new ArrayList<>();
+                    NodeList llistaArticles = elementEncarrec.getElementsByTagName("article");
+
+                    for(int j = 0; j < llistaArticles.getLength(); j++) {
+                        Node nodeArticle = llistaArticles.item(j);
+                        if(nodeArticle.getNodeType() == Node.ELEMENT_NODE) {
+                            Element elementArticle = (Element) nodeArticle;
+                            String nomArticle = elementArticle.getElementsByTagName("nombre_Articulo").item(0).getTextContent();
+                            Unitat unitat = Unitat.fromString(elementArticle.getElementsByTagName("unitat").item(0).getTextContent());
+                            Double quantitat = Double.parseDouble(elementArticle.getElementsByTagName("quantitat").item(0).getTextContent());
+                            Double preu = Double.parseDouble(elementArticle.getElementsByTagName("preu").item(0).getTextContent());
+                            Article article = new Article(nomArticle, unitat, quantitat, preu);
+                            articles.add(article);
+                        }
+                    }
+                    Encarrec encarrec = new Encarrec(id, nomClient, telefonClient, data, articles);
+                    encarrecs.add(encarrec);
+                }
+            }
+            for(Encarrec encarrec : encarrecs) {
+                System.out.println(generarAlbara(encarrec));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return albaran;
-    }
-
-    public static String readSAX(String ruta, boolean varios) throws Exception {
-        String albaran = "";
-        
-        if(varios) { // especifica un unico cliente 
-
-        } else {
-            // leemos todos los encargos
-        }
-
-        return albaran;
     }
     public static void crearElement(String dadaEmpleat, String valor, Element arrel, Document document) {
         Element element = document.createElement(dadaEmpleat);
         Text text = document.createTextNode(valor);
         element.appendChild(text);
         arrel.appendChild(element);
+    }
+    public static void readSAX(String ruta, boolean varios) throws Exception {
+    
+    }
+    public static String generarAlbara(Encarrec encarrec) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\nId: " + encarrec.getId() +"\n");
+        sb.append("Nom del client: " + encarrec.getNomClient() + "\n");
+        sb.append("Telefon del client: " + encarrec.getTelefonClient() + "\n");
+        sb.append("Data de l'encàrrec: " + encarrec.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + "\n");
+        sb.append(String.format("%-10s %-10s %-10s %-10s%n", "Quantitat", "Unitats", "Article", "Preu"));
+        sb.append(String.format("%-10s %-10s %-10s %-10s%n", "=========", "=======", "=======", "===="));
+        for (Article a : encarrec.getArticles()) {
+            sb.append(String.format("%-10s %-10s %-10s %-10s%n", a.getQuantitat(), a.getUnitat(), a.getNom(), a.getPreu()));
+        }
+        sb.append("\nPreu total: " + encarrec.getPreuTotal() + "€\n");
+        return sb.toString();
     }
 }

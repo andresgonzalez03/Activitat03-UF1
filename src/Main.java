@@ -23,7 +23,7 @@ public class Main {
                 case "1" -> {
                     generaEncarrecs();
                 }
-                case "2" -> System.out.println("Encara no podem mostrar jeje");
+                case "2" -> mostraEncarrecs();
                 case "3" -> {
                     System.out.println("Adéu");
                     return;
@@ -141,13 +141,12 @@ public class Main {
             }
         }  
     }
-    /* private static void mostraEncarrecs() throws IOException {
+    private static void mostraEncarrecs() throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Indica la ruta de l'arxiu que vols modificar:");
+        System.out.println("Indica la ruta de l'arxiu que vols veure:");
         String ruta = reader.readLine();
-        
+        Gestor.readDOM(ruta);
     }
-    */
     private static void generaEncarrecs() throws Exception {
         ArrayList<Encarrec> encarrecs = new ArrayList<>();
         Encarrec.reiniciarId();
