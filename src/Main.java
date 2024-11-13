@@ -22,9 +22,8 @@ public class Main {
             switch(resposta) {
                 case "1" -> {
                     generaEncarrecs();
-                    System.out.println("Els encàrrecs s'han generat correctament\n");
                 }
-                case "2" -> mostraEncarrecs();
+                case "2" -> System.out.println("Encara no podem mostrar jeje");
                 case "3" -> {
                     System.out.println("Adéu");
                     return;
@@ -142,39 +141,16 @@ public class Main {
             }
         }  
     }
-    private static void mostraEncarrecs() throws IOException {
+    /* private static void mostraEncarrecs() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Indica la ruta de l'arxiu que vols modificar:");
         String ruta = reader.readLine();
-        Gestor.LlegirEncarrecSerialitzable(ruta);
-    }
-    private static void quinFitxer(ArrayList<Encarrec> encarrecs) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        String resposta;
-        Encarrec.reiniciarId();
-        while(true) {
-            System.out.println("Vale, quin tipus de fitxer vols generar?");
-            System.out.println("1. Random");
-            System.out.println("2. Serialitzat");
-            resposta = reader.readLine();
         
-            switch (resposta) {
-                case "1" -> {
-                    System.out.println("Generant fitxer Random...");
-                    Gestor.EscriureEncarrecRandom(encarrecs);
-                    return;
-                }
-                case "2" -> {
-                    System.out.println("Generant fitxer Serialitzat...");
-                    Gestor.EscriureEncarrecSerialitzable(encarrecs);
-                    return;
-                }
-                default -> System.out.println("Opció no vàlida. Tria 1 o 2");
-            }
-        }
     }
+    */
     private static void generaEncarrecs() throws Exception {
         ArrayList<Encarrec> encarrecs = new ArrayList<>();
+        Encarrec.reiniciarId();
         while(true) {
             Encarrec encarrec = new Encarrec();
             demanaDadesUsuari(encarrec);

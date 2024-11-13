@@ -14,22 +14,16 @@ import java.util.Date;
 
 public class Gestor {
     private static final String PATH = System.getProperty("user.home");
-    public static void crearDirectoris() throws IOException {
-        String directoris[] = {PATH + "/Serializable/",PATH + "/fitxersRandom"};
-        File carpeta[] = new File[directoris.length];
-        for (int i = 0; i < carpeta.length; i++) {
-            carpeta[i] = new File(directoris[i]);
-        }
-        for(File f : carpeta) {
-            if(!f.exists()) {
-                if(f.mkdirs()) {
-                    System.out.println("Directori creat: " + f.getPath());
-                } else {
-                    System.out.println("No s'ha pogut fer el directori: " + f.getPath());
-                }
+    public static void crearDirectori() throws IOException {
+        File carpeta = new File(PATH + "/XML");
+        if(!carpeta.exists()) {
+            if(carpeta.mkdirs()) {
+                System.out.println("Directori creat: " + carpeta.getPath());
             } else {
-                System.out.println("El directori ja existeix: " + f.getPath());
+                System.out.println("No s'ha pogut fer el directori: " + carpeta.getPath());
             }
+        } else {
+            System.out.println("El directori ja existeix: " + carpeta.getPath());
         }
     }
     
@@ -47,8 +41,10 @@ public class Gestor {
         sb.append("\nPreu total: " + encarrec.getPreuTotal() + "€\n");
         return sb.toString();
     }
-
     public static void writeDOM(ArrayList<Encarrec> encargos) throws Exception {
+        crearDirectori();
+        String ruta = PATH + "/Serializable/";
+        String nomArxiu = ruta + "encarrecs_client_" + new SimpleDateFormat("dd-MM-yyyy_HH_mm_ss").format(new Date(System.currentTimeMillis())) + ".xml";
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -57,21 +53,31 @@ public class Gestor {
             document.setXmlVersion("1.0");
 
             for(Encarrec emp : encargos) {
-                Element employee = document.createElement("encarrec");
-                employee.setAttribute("id", Integer.toString(emp.getId()));
-                document.getDocumentElement().appendChild(employee);
+                Element encarrec = document.createElement("encarrec");
+                encarrec.setAttribute("id", Integer.toString(emp.getId()));
+                document.getDocumentElement().appendChild(encarrec);
 
-                crearElement("nombre", emp.getNomClient(), employee, document);
-                crearElement("telefono", emp.getTelefonClient(), employee, document);
-                crearElement("fecha", emp.getData().toString(), employee, document);
+                crearElement("nombre", emp.getNomClient(), encarrec, document);
+                crearElement("telefono", emp.getTelefonClient(), encarrec, document);
+                crearElement("fecha", emp.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), encarrec, document);
+
+                Element articles = document.createElement("articles"); // crear element articles
+                encarrec.appendChild(articles); // afegir etiqueta articles dins d'encarrec
+
                 for(Article a : emp.getArticles()) {
-                    crearElement("")
+                    Element article = document.createElement("article"); // crear etiqueta article
+                    articles.appendChild(article); // afegir etiqueta article dins d'articles.
+                    crearElement("nombre_Articulo", a.getNom(), article, document);
+                    crearElement("unitat", a.getUnitat().toString(), article, document);
+                    crearElement("quantitat", Double.toString(a.getQuantitat()), article, document);
+                    crearElement("preu", Double.toString(a.getPreu()), article, document);
+                    
                 }
-
-                crearElement("precioTotal", emp.getPreuStr(), employee, document);
+                emp.calcularPreuTotal();
+                crearElement("precioTotal", emp.getPreuStr(), encarrec, document);
             }
             Source source = new DOMSource(document);
-            Result result = new StreamResult(new FileWriter("encarrecs_" + System.currentTimeMillis() + ".xml"));
+            Result result = new StreamResult(new FileWriter(nomArxiu));
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes"); 
             transformer.setOutputProperty("{http://xml.apache.org/xalan}indent-amount", "5");
@@ -81,7 +87,6 @@ public class Gestor {
             e.printStackTrace();
         }
     }
-
     public static String readDOM(String ruta) throws Exception {
         ArrayList<Encarrec> encargos = new ArrayList<>();
 
