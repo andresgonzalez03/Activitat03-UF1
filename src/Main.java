@@ -143,9 +143,30 @@ public class Main {
     }
     private static void mostraEncarrecs() throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Indica la ruta de l'arxiu que vols veure:");
-        String ruta = reader.readLine();
-        Gestor.readDOM(ruta);
+        System.out.println("Vols cercar un encàrrec per nom?  (sí o no)");
+        String resposta = reader.readLine();
+        if(resposta.equals("sí") || resposta.equals("si")) {
+            System.out.println("Indica la ruta de l'arxiu que vols veure:");
+            String ruta = reader.readLine();
+            System.out.println("Ara, introdueix el nom del client:");
+            String nomClient = reader.readLine();
+            // Gestor.readSAX(ruta, nomClient);
+        } else {
+            System.out.println("Llavors, de quina manera vols llegir els encàrrecs, 1 o 2?");
+            String r = reader.readLine();
+            if(r.equals("1")) {
+                System.out.println("Indica la ruta de l'arxiu que vols veure:");
+                String ruta = reader.readLine();
+                Gestor.readDOM(ruta);
+            } else if(r.equals("2")) {
+                System.out.println("Indica la ruta de l'arxiu que vols veure:");
+                String ruta = reader.readLine();
+                // Gestor.readSAX(ruta, null); 
+            } else {
+                System.out.println("Opció no vàlida. Si us plau, tria 1 o 2.");
+            }
+        }
+        
     }
     private static void generaEncarrecs() throws Exception {
         ArrayList<Encarrec> encarrecs = new ArrayList<>();

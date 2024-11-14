@@ -4,12 +4,22 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import javax.xml.transform.*; 
 import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
 import java.util.Date;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+
 
 
 public class Gestor {
@@ -32,6 +42,12 @@ public class Gestor {
         String nomArxiu = ruta + "encarrecs_client_" + new SimpleDateFormat("dd-MM-yyyy_HH_mm_ss").format(new Date(System.currentTimeMillis())) + ".xml";
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
+            Collections.sort(encargos, new Comparator<Encarrec>() {
+                @Override
+                public int compare(Encarrec e1, Encarrec e2) {
+                    return e1.getNomClient().compareTo(e2.getNomClient()); // Ordenar alfabéticamente por nombre de cliente
+                }
+            });
             DocumentBuilder builder = factory.newDocumentBuilder();
             DOMImplementation implementation = builder.getDOMImplementation();
             Document document = implementation.createDocument(null, "encarrecs", null);
@@ -121,9 +137,16 @@ public class Gestor {
         element.appendChild(text);
         arrel.appendChild(element);
     }
-    public static void readSAX(String ruta, boolean varios) throws Exception {
-    
-    }
+    /*public static void readSAX(String ruta, String nomClient) throws Exception {
+        SAXParserFactory saxpf = SAXParserFactory.newInstance();
+        SAXParser parser = saxpf.newSAXParser();
+        XMLReader procesadorXML = parser.getXMLReader();
+        GestorEncarrecs gestor = new GestorEncarrecs(nomClient);
+        procesadorXML.setContentHandler(gestor);
+        InputSource fileXML = new InputSource(ruta);
+        procesadorXML.parse(fileXML);
+    }*/
+
     public static String generarAlbara(Encarrec encarrec) {
         StringBuilder sb = new StringBuilder();
         sb.append("\nId: " + encarrec.getId() +"\n");
@@ -138,4 +161,7 @@ public class Gestor {
         sb.append("\nPreu total: " + encarrec.getPreuTotal() + "€\n");
         return sb.toString();
     }
+}
+
+class GestorEncarrecs extends DefaultHandler {
 }
