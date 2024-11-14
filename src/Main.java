@@ -150,9 +150,9 @@ public class Main {
             String ruta = reader.readLine();
             System.out.println("Ara, introdueix el nom del client:");
             String nomClient = reader.readLine();
-            // Gestor.readSAX(ruta, nomClient);
+             Gestor.readSAX(ruta, nomClient);
         } else {
-            System.out.println("Llavors, de quina manera vols llegir els encàrrecs, 1 o 2?");
+            System.out.println("Llavors, de quina manera vols llegir els encàrrecs, 1 (DOM) o 2 (SAX)?");
             String r = reader.readLine();
             if(r.equals("1")) {
                 System.out.println("Indica la ruta de l'arxiu que vols veure:");
@@ -161,7 +161,7 @@ public class Main {
             } else if(r.equals("2")) {
                 System.out.println("Indica la ruta de l'arxiu que vols veure:");
                 String ruta = reader.readLine();
-                // Gestor.readSAX(ruta, null); 
+                Gestor.readSAX(ruta, null); 
             } else {
                 System.out.println("Opció no vàlida. Si us plau, tria 1 o 2.");
             }

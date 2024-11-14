@@ -3,23 +3,17 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import javax.xml.transform.*; 
 import javax.xml.transform.dom.*;
 import javax.xml.transform.stream.*;
-import java.util.Date;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+
+import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
-
 
 
 public class Gestor {
@@ -137,16 +131,15 @@ public class Gestor {
         element.appendChild(text);
         arrel.appendChild(element);
     }
-    /*public static void readSAX(String ruta, String nomClient) throws Exception {
+    public static void readSAX(String ruta, String nomClient) throws Exception {
         SAXParserFactory saxpf = SAXParserFactory.newInstance();
         SAXParser parser = saxpf.newSAXParser();
         XMLReader procesadorXML = parser.getXMLReader();
-        GestorEncarrecs gestor = new GestorEncarrecs(nomClient);
+        GestioContingut gestor = new GestioContingut(nomClient);
         procesadorXML.setContentHandler(gestor);
         InputSource fileXML = new InputSource(ruta);
         procesadorXML.parse(fileXML);
-    }*/
-
+    }
     public static String generarAlbara(Encarrec encarrec) {
         StringBuilder sb = new StringBuilder();
         sb.append("\nId: " + encarrec.getId() +"\n");
@@ -162,6 +155,83 @@ public class Gestor {
         return sb.toString();
     }
 }
+class GestioContingut extends DefaultHandler {
+    private StringBuilder contingut;
+    private int id;
+    private String nomClient;
+    private String telefonClient;
+    private LocalDate data;
+    private ArrayList<Article> articles;
+    private ArrayList<Encarrec> encarrecs;
 
-class GestorEncarrecs extends DefaultHandler {
+    private String nombreArticulo;
+    private Unitat unitat;
+    private double quantitat;
+    private double preu;
+
+    private String nomClientXML;
+
+    public GestioContingut(String nombre) {
+        this.nomClient = nombre;
+        this.contingut = new StringBuilder();
+        this.encarrecs = new ArrayList<>();
+    }
+    @Override
+    public void startElement (String uri, String nom, String nomC, Attributes atts) {
+        this.contingut.setLength(0);
+        if (nomC.equals("encarrec")) {
+            this.id = Integer.parseInt(atts.getValue("id"));
+            this.articles = new ArrayList<>();
+        }
+    }
+    @Override
+    public void characters(char[] ch, int inicio, int longitud) throws SAXException {
+        this.contingut.append(ch, inicio, longitud);
+    }
+    @Override
+    public void endElement(String uri, String nom, String nomC) {
+        switch (nomC) {
+            case "nombre":
+                this.nomClientXML = contingut.toString();
+                break;
+            case "telefono":
+                this.telefonClient = contingut.toString();
+                break;
+            case "fecha":
+                this.data = LocalDate.parse(contingut.toString(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                break;
+            case "nombre_Articulo":
+                this.nombreArticulo = contingut.toString();
+                break;
+            case "unitat":
+                this.unitat = Unitat.fromString(contingut.toString());
+                break;
+            case "quantitat":
+                this.quantitat = Double.parseDouble(contingut.toString());
+                break;
+            case "preu":
+                this.preu = Double.parseDouble(contingut.toString());
+                break;
+            case "article":
+                Article article = new Article(nombreArticulo, unitat, quantitat, preu);
+                this.articles.add(article);
+                break;
+            case "encarrec":
+                if (this.nomClient != null && !this.nomClient.isEmpty()) {
+                    if (this.nomClientXML.equals(this.nomClient)) {
+                        Encarrec encarrec = new Encarrec(id, nomClientXML, telefonClient, data, articles);
+                        this.encarrecs.add(encarrec);
+                    }
+                } else {
+                    Encarrec encarrec = new Encarrec(id, nomClientXML, telefonClient, data, articles);
+                    this.encarrecs.add(encarrec);
+                }
+                break;
+        }
+    }
+    public void endDocument() {
+        for(Encarrec e: encarrecs) {
+            System.out.println(Gestor.generarAlbara(e));
+        }
+    }
 }
