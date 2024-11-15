@@ -52,9 +52,9 @@ public class Gestor {
                 encarrec.setAttribute("id", Integer.toString(emp.getId()));
                 document.getDocumentElement().appendChild(encarrec);
 
-                crearElement("nombre", emp.getNomClient(), encarrec, document);
-                crearElement("telefono", emp.getTelefonClient(), encarrec, document);
-                crearElement("fecha", emp.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), encarrec, document);
+                crearElement("nom_client", emp.getNomClient(), encarrec, document);
+                crearElement("telefon_client", emp.getTelefonClient(), encarrec, document);
+                crearElement("data_encarrec", emp.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")), encarrec, document);
 
                 Element articles = document.createElement("articles"); // crear element articles
                 encarrec.appendChild(articles); // afegir etiqueta articles dins d'encarrec
@@ -62,14 +62,14 @@ public class Gestor {
                 for(Article a : emp.getArticles()) {
                     Element article = document.createElement("article"); // crear etiqueta article
                     articles.appendChild(article); // afegir etiqueta article dins d'articles.
-                    crearElement("nombre_Articulo", a.getNom(), article, document);
+                    crearElement("nom_article", a.getNom(), article, document);
                     crearElement("unitat", a.getUnitat().toString(), article, document);
                     crearElement("quantitat", Double.toString(a.getQuantitat()), article, document);
                     crearElement("preu", Double.toString(a.getPreu()), article, document);
                     
                 }
                 emp.calcularPreuTotal();
-                crearElement("precioTotal", emp.getPreuStr(), encarrec, document);
+                crearElement("preuTotal", emp.getPreuStr(), encarrec, document);
             }
             Source source = new DOMSource(document);
             Result result = new StreamResult(new FileWriter(nomArxiu));
@@ -95,9 +95,9 @@ public class Gestor {
                 if(nodeEncarrec.getNodeType() == Node.ELEMENT_NODE) {
                     Element elementEncarrec = (Element) nodeEncarrec;
                     int id = Integer.parseInt(elementEncarrec.getAttribute("id"));
-                    String nomClient = elementEncarrec.getElementsByTagName("nombre").item(0).getTextContent();
-                    String telefonClient = elementEncarrec.getElementsByTagName("telefono").item(0).getTextContent();
-                    LocalDate data = LocalDate.parse(elementEncarrec.getElementsByTagName("fecha").item(0).getTextContent(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                    String nomClient = elementEncarrec.getElementsByTagName("nom_client").item(0).getTextContent();
+                    String telefonClient = elementEncarrec.getElementsByTagName("telefon_client").item(0).getTextContent();
+                    LocalDate data = LocalDate.parse(elementEncarrec.getElementsByTagName("data_encarrec").item(0).getTextContent(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
 
                     ArrayList<Article> articles = new ArrayList<>();
                     NodeList llistaArticles = elementEncarrec.getElementsByTagName("article");
@@ -106,7 +106,7 @@ public class Gestor {
                         Node nodeArticle = llistaArticles.item(j);
                         if(nodeArticle.getNodeType() == Node.ELEMENT_NODE) {
                             Element elementArticle = (Element) nodeArticle;
-                            String nomArticle = elementArticle.getElementsByTagName("nombre_Articulo").item(0).getTextContent();
+                            String nomArticle = elementArticle.getElementsByTagName("nom_article").item(0).getTextContent();
                             Unitat unitat = Unitat.fromString(elementArticle.getElementsByTagName("unitat").item(0).getTextContent());
                             Double quantitat = Double.parseDouble(elementArticle.getElementsByTagName("quantitat").item(0).getTextContent());
                             Double preu = Double.parseDouble(elementArticle.getElementsByTagName("preu").item(0).getTextContent());
@@ -191,16 +191,16 @@ class GestioContingut extends DefaultHandler {
     @Override
     public void endElement(String uri, String nom, String nomC) {
         switch (nomC) {
-            case "nombre":
+            case "nom_client":
                 this.nomClientXML = contingut.toString();
                 break;
-            case "telefono":
+            case "telefon_client":
                 this.telefonClient = contingut.toString();
                 break;
-            case "fecha":
+            case "data_encarrec":
                 this.data = LocalDate.parse(contingut.toString(), DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                 break;
-            case "nombre_Articulo":
+            case "nom_article":
                 this.nombreArticulo = contingut.toString();
                 break;
             case "unitat":
@@ -218,7 +218,7 @@ class GestioContingut extends DefaultHandler {
                 break;
             case "encarrec":
                 if (this.nomClient != null && !this.nomClient.isEmpty()) {
-                    if (this.nomClientXML.equals(this.nomClient)) {
+                    if (this.nomClientXML.toLowerCase().equals(nomClient.toLowerCase())) {
                         Encarrec encarrec = new Encarrec(id, nomClientXML, telefonClient, data, articles);
                         this.encarrecs.add(encarrec);
                     }
